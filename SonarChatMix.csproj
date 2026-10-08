@@ -9,6 +9,9 @@
     <AssemblyName>SonarChatMix</AssemblyName>
     <RootNamespace>SonarChatMix</RootNamespace>
     <ApplicationIcon>app.ico</ApplicationIcon>
+    <Version>1.0.0</Version>
+    <Product>Sonar ChatMix</Product>
+    <Authors>Wilson Julian Merlo</Authors>
   </PropertyGroup>
 
   <ItemGroup>
