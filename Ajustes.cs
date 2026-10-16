@@ -105,6 +105,15 @@ sealed class Ajustes
     public double PasoChatMix { get; set; } = 0.1;
     public double PasoVolumen { get; set; } = 0.05;
 
+    // Dial de volumen del auricular → ChatMix. Apagado, la app no toca ni el dial ni el volumen.
+    public bool DialChatMix { get; set; }
+    public double PasoDial { get; set; } = 0.05; // por clic
+    public bool DialInvertido { get; set; } // normal: subir volumen = más chat
+    public string DialSalida { get; set; } = ""; // nombre de la salida del auricular; "" = buscar "BlackShark"
+    // Volumen fijo de esa salida mientras el dial maneja el ChatMix. Si llega a 100 % (o 0 %), el auricular
+    // hace "bip bip" y deja de mandar el giro para ese lado: por eso queda lejos de los extremos.
+    public double VolumenDial { get; set; } = 0.8;
+
     // Moments: que siempre esté grabando el escritorio, y que el micrófono nunca quede silenciado en los clips.
     public bool MomentsEscritorio { get; set; } = true;
     public bool MomentsMicSiempre { get; set; } = true;

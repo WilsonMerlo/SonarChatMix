@@ -12,6 +12,8 @@
     <Version>1.0.0</Version>
     <Product>Sonar ChatMix</Product>
     <Authors>Wilson Julian Merlo</Authors>
+    <!-- Diagnostico/ es otro proyecto (herramienta de consola): que no se compile dentro de la app. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);Diagnostico/**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>

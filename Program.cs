@@ -22,6 +22,7 @@ sealed class TrayApp : ApplicationContext
     readonly SonarClient sonar = new();
     readonly SemaphoreSlim cola = new(1, 1); // procesa las pulsaciones de a una, en orden
     readonly HotkeyWindow hotkeys = new();
+    readonly DialAuricular dial = new();
     readonly EchoFix.AntiEco antiEco = new();
     readonly NotifyIcon tray;
     readonly Icon icono;
@@ -38,6 +39,10 @@ sealed class TrayApp : ApplicationContext
     // Al des-silenciar el maestro, Sonar des-silencia todas las salidas. Guardamos cuáles
     // estaban silenciadas antes para dejarlas como estaban.
     Dictionary<string, bool>? mutesAntesDelMaestro;
+
+    // Clics del dial que todavía no se mandaron a Sonar.
+    int clicsPendientes;
+    bool moviendoPorDial;
 
     public TrayApp()
     {
@@ -66,6 +71,9 @@ sealed class TrayApp : ApplicationContext
 
         hotkeys.Pressed += async id => await Ejecutar((Accion)(id - 1));
         RegistrarAtajos();
+
+        dial.Giro += AlGirarDial;
+        dial.Configurar(ajustes.DialChatMix, ajustes.DialSalida, ajustes.VolumenDial);
 
         vigiaMoments.Tick += async (_, _) => await VigilarMoments();
         vigiaMoments.Start();
@@ -139,6 +147,7 @@ sealed class TrayApp : ApplicationContext
                     antiEco.Activar(opciones.EcoActivo);
                     itemEco.Checked = antiEco.Activo;
                 }
+                dial.Configurar(ajustes.DialChatMix, ajustes.DialSalida, ajustes.VolumenDial);
             }
             opciones.Dispose();
             opciones = null;
@@ -149,12 +158,14 @@ sealed class TrayApp : ApplicationContext
         opciones.Activate();
     }
 
-    async Task Ejecutar(Accion accion)
+    Task Ejecutar(Accion accion) => Ejecutar(() => Hacer(accion));
+
+    async Task Ejecutar(Func<Task> tarea)
     {
         await cola.WaitAsync();
         try
         {
-            await ConReintento(() => Hacer(accion));
+            await ConReintento(tarea);
         }
         catch (Exception e)
         {
@@ -193,6 +204,28 @@ sealed class TrayApp : ApplicationContext
         Accion.MicMute => AlternarMute("chatCapture", "Micrófono"),
         _ => Task.CompletedTask,
     };
+
+    // direccion: +1 = el lado de subir volumen. Si girás rápido, los clics que llegan mientras Sonar responde
+    // se juntan y van en una sola llamada, por la misma cola que los atajos.
+    async void AlGirarDial(int direccion)
+    {
+        clicsPendientes += ajustes.DialInvertido ? -direccion : direccion;
+        if (moviendoPorDial) return;
+        moviendoPorDial = true;
+        try
+        {
+            while (clicsPendientes != 0)
+            {
+                int clics = clicsPendientes;
+                clicsPendientes = 0;
+                await Ejecutar(() => MoverChatMix(clics * ajustes.PasoDial));
+            }
+        }
+        finally
+        {
+            moviendoPorDial = false;
+        }
+    }
 
     // delta = null → centrar
     async Task MoverChatMix(double? delta)
@@ -284,6 +317,7 @@ sealed class TrayApp : ApplicationContext
         vigiaMoments.Dispose();
         moments.Dispose();
         hotkeys.Dispose();
+        dial.Dispose();
         antiEco.Dispose();
         tray.Visible = false;
         tray.Dispose();

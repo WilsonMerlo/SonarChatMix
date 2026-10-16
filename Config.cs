@@ -8,6 +8,13 @@ static class Config
 
     // El carrusel de dispositivos queda más tiempo: mientras se ve, la próxima pulsación cambia.
     public const int OsdDispositivoMs = 2500;
+
+    // Dial del auricular. Cada clic manda dos pulsaciones de volumen separadas por 6-10 ms (y entre un clic
+    // y otro pasan 30 ms o más, aunque lo gires rápido): si la segunda llega antes de esto, es el mismo clic.
+    public const int DialClicMs = 25;
+
+    // Con la salida en "Automático", se usa la primera cuyo nombre contenga esto.
+    public const string DialNombreAuto = "BlackShark";
 }
 
 [Flags]

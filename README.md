@@ -14,6 +14,24 @@ F12 lo reserva Windows, así que ese se escucha con un hook de teclado en vez de
 El ChatMix solo funciona si en Sonar los canales Juego y Chat salen por el mismo dispositivo
 (si no, Sonar lo bloquea y la app muestra un error).
 
+## Dial del auricular → ChatMix
+
+Con un Razer BlackShark V2 Pro (dongle en modo PC), el dial de volumen del auricular puede mover el ChatMix.
+Se activa en **Opciones → General → Dial del auricular**: ahí elegís cuánto se mueve por clic, el sentido, la
+salida de audio del auricular (en "Automático" usa la primera que se llame BlackShark) y su volumen fijo.
+
+Por cada clic, el auricular manda teclas de volumen (HID Consumer Control) y Windows se las aplica a la salida
+del propio auricular. La app escucha con Raw Input solo las que vienen del auricular (las del teclado no) y
+mueve el ChatMix. Al auricular no se le manda nada.
+
+El auricular sigue el volumen de esa salida, y en 100 % (o 0 %) hace "bip bip" y deja de mandar el giro para
+ese lado. Por eso, mientras está activado, la app deja esa salida fija en el volumen que elegiste (80 % por
+defecto) y lo vuelve a poner cada vez que cambia. El volumen de lo que escuchás se maneja desde Sonar.
+El cartel de volumen de Windows sigue apareciendo al girar el dial.
+
+Para ver qué hace el dial de otro auricular está `Diagnostico/`, una herramienta de consola aparte (solo lee):
+`dotnet run --project Diagnostico`, girás el dial, Ctrl+C, y queda todo en `diagnostico-dial.log`.
+
 ## Arreglo de eco de Discord
 
 Integrado desde [DiscordSonarEchoFix](https://github.com/codedbyyou/DiscordSonarEchoFix) 1.0.1 (MIT, ver

@@ -10,6 +10,11 @@ sealed class OpcionesForm : Form
     readonly CheckBox chkEco = new() { Text = "Arreglo de eco de Discord", AutoSize = true };
     readonly NumericUpDown numChatMix = new() { Minimum = 0.05m, Maximum = 0.5m, Increment = 0.05m, DecimalPlaces = 2, Width = 70 };
     readonly NumericUpDown numVolumen = new() { Minimum = 1, Maximum = 25, Width = 70 };
+    readonly CheckBox chkDial = new() { Text = "Dial del auricular → ChatMix", AutoSize = true };
+    readonly NumericUpDown numDial = new() { Minimum = 0.01m, Maximum = 0.5m, Increment = 0.01m, DecimalPlaces = 2, Width = 70 };
+    readonly ComboBox cmbDial = new() { DropDownStyle = ComboBoxStyle.DropDownList, Anchor = AnchorStyles.Left | AnchorStyles.Right, DropDownWidth = 400 };
+    readonly CheckBox chkDialInvertido = new() { Text = "Invertir el sentido", AutoSize = true };
+    readonly NumericUpDown numVolumenDial = new() { Minimum = 10, Maximum = 90, Increment = 5, Width = 70 };
     readonly CheckBox chkEscritorio = new() { Text = "Grabar siempre el escritorio", AutoSize = true };
     readonly CheckBox chkMic = new() { Text = "Nunca silenciar el micrófono en los clips", AutoSize = true };
     readonly Dictionary<Accion, HotkeyBox> cajas = new();
@@ -24,7 +29,7 @@ sealed class OpcionesForm : Form
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = MinimizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
-        ClientSize = new Size(440, 560);
+        ClientSize = new Size(440, 760);
 
         var tabs = new TabControl { Dock = DockStyle.Fill };
         tabs.TabPages.Add(PestañaGeneral(ecoActivo));
@@ -83,6 +88,23 @@ sealed class OpcionesForm : Form
         Fila(Etiqueta("ChatMix por pulsación (de -1 a 1):"), numChatMix);
         Fila(Etiqueta("Volumen por pulsación (%):"), numVolumen);
 
+        var dial = Etiqueta("Dial del auricular");
+        dial.Font = new Font(Font, FontStyle.Bold);
+        dial.Margin = new Padding(3, 14, 3, 4);
+        Fila(dial);
+        chkDial.Checked = Ajustes.DialChatMix;
+        Fila(chkDial);
+        Fila(Ayuda("Subir: más chat. Bajar: más juego. El volumen del auricular en Windows queda fijo: en 100 % " +
+                   "o 0 % el auricular deja de mandar el giro. El volumen se maneja desde Sonar."));
+        numDial.Value = Math.Clamp((decimal)Ajustes.PasoDial, numDial.Minimum, numDial.Maximum);
+        Fila(Etiqueta("ChatMix por clic del dial:"), numDial);
+        numVolumenDial.Value = Math.Clamp((decimal)Math.Round(Ajustes.VolumenDial * 100), numVolumenDial.Minimum, numVolumenDial.Maximum);
+        Fila(Etiqueta("Volumen fijo del auricular (%):"), numVolumenDial);
+        LlenarSalidas();
+        Fila(Etiqueta("Salida del auricular:"), cmbDial);
+        chkDialInvertido.Checked = Ajustes.DialInvertido;
+        Fila(chkDialInvertido);
+
         var moments = Etiqueta("SteelSeries Moments");
         moments.Font = new Font(Font, FontStyle.Bold);
         moments.Margin = new Padding(3, 14, 3, 4);
@@ -96,9 +118,21 @@ sealed class OpcionesForm : Form
         Fila(Ayuda("Saca el atajo \"Activar silencio del micrófono\" de Moments y, si el micrófono de los clips " +
                    "queda silenciado, lo vuelve a activar."));
 
-        var p = new TabPage("General");
+        var p = new TabPage("General") { AutoScroll = true };
         p.Controls.Add(t);
         return p;
+    }
+
+    // Primero "Automático" (el primero que se llame BlackShark), después todas las salidas de Windows.
+    void LlenarSalidas()
+    {
+        var salidas = Audio.Salidas();
+        string? detectada = Audio.Buscar("", salidas)?.Nombre;
+        cmbDial.Items.Add(detectada is null ? "Automático (no encuentro ningún BlackShark)" : $"Automático: {detectada}");
+        foreach (var s in salidas) cmbDial.Items.Add(s.Nombre);
+        // Si la que elegiste está desconectada ahora, igual queda en la lista para no perderla.
+        if (Ajustes.DialSalida != "" && !cmbDial.Items.Contains(Ajustes.DialSalida)) cmbDial.Items.Add(Ajustes.DialSalida);
+        cmbDial.SelectedIndex = Ajustes.DialSalida == "" ? 0 : cmbDial.Items.IndexOf(Ajustes.DialSalida);
     }
 
     TabPage PestañaAtajos(IReadOnlySet<Accion> ocupados)
@@ -170,6 +204,11 @@ sealed class OpcionesForm : Form
         Ajustes.Atajos = cajas.Where(c => c.Value.Atajo is not null).ToDictionary(c => c.Key, c => c.Value.Atajo!);
         Ajustes.PasoChatMix = (double)numChatMix.Value;
         Ajustes.PasoVolumen = (double)numVolumen.Value / 100;
+        Ajustes.DialChatMix = chkDial.Checked;
+        Ajustes.PasoDial = (double)numDial.Value;
+        Ajustes.DialInvertido = chkDialInvertido.Checked;
+        Ajustes.VolumenDial = (double)numVolumenDial.Value / 100;
+        Ajustes.DialSalida = cmbDial.SelectedIndex <= 0 ? "" : (string)cmbDial.SelectedItem!;
         Ajustes.MomentsEscritorio = chkEscritorio.Checked;
         Ajustes.MomentsMicSiempre = chkMic.Checked;
     }

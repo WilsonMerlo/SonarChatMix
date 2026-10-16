@@ -3,6 +3,9 @@ bin/
 obj/
 publish/
 
+# Log de la herramienta de diagnóstico del dial
+diagnostico-dial.log
+
 # Visual Studio / Rider / VS Code
 .vs/
 .idea/

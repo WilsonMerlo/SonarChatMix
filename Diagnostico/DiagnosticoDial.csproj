@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Herramienta de consola para ver qué hace el dial del auricular. No forma parte de la app. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>DiagnosticoDial</AssemblyName>
+    <RootNamespace>DiagnosticoDial</RootNamespace>
+  </PropertyGroup>
+
+</Project>
